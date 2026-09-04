@@ -103,7 +103,11 @@
 
   function addNavbarButton() {
     if ($(".nz-ask-nav").length) return;
-    var nav = $("header .navbar .navbar-nav").first();
+    // The header holds TWO .navbar-nav lists: #navbar-breadcrumbs on the left,
+    // which Frappe empties on every route change (an item put there vanishes
+    // at once), and the icon cluster on the right (bell, help, user). Ours
+    // goes first in the right-hand list.
+    var nav = $("header .navbar ul.navbar-nav").not("#navbar-breadcrumbs").last();
     if (!nav.length) return;
     var item = $('<li class="nav-item nz-ask-nav"><a class="nav-link" href="#" title="' + __("Ask Nezmaro") + '">' +
       '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"></path></svg>' +
@@ -113,5 +117,6 @@
   }
 
   $(document).on("app_ready", addNavbarButton);
+  $(document).on("page-change", addNavbarButton); // re-add if the navbar is ever rebuilt
   $(function () { setTimeout(addNavbarButton, 800); });
 })();
