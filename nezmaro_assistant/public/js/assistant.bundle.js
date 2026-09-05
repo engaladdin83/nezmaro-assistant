@@ -165,6 +165,59 @@
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // 0.1.5 — the kitchen ticket by itself (restaurant edition). The till prints
+  // the receipt when an order completes (POS Profile: print receipt on order
+  // complete); on a site that carries the "Kitchen Ticket" format, the kitchen
+  // copy prints right after it, and the order summary gets a Kitchen button
+  // for a reprint. Hooked on the summary's load_summary_of(doc, after_submission),
+  // the one place the till reaches after every completed order.
+  var KITCHEN_FORMAT = "Kitchen Ticket";
+  var kitchenKnown = null; // null = not asked yet, true/false = the site has the format or not
+
+  function siteHasKitchenTicket() {
+    if (kitchenKnown !== null) return Promise.resolve(kitchenKnown);
+    return frappe.db.exists("Print Format", KITCHEN_FORMAT).then(function (yes) {
+      kitchenKnown = !!yes;
+      return kitchenKnown;
+    }).catch(function () { return false; });
+  }
+
+  function printKitchenTicket(doc) {
+    if (!doc || !doc.name) return;
+    frappe.utils.print(doc.doctype, doc.name, KITCHEN_FORMAT, doc.letter_head, doc.language || (frappe.boot && frappe.boot.lang));
+  }
+
+  function hookTill() {
+    var pos = window.erpnext && erpnext.PointOfSale && erpnext.PointOfSale.PastOrderSummary;
+    if (!pos || !pos.prototype || pos.prototype.__nzKitchenHooked) return;
+    var original = pos.prototype.load_summary_of;
+    if (typeof original !== "function") return;
+    pos.prototype.load_summary_of = function (doc, afterSubmission) {
+      var summary = this;
+      var result = original.apply(this, arguments);
+      siteHasKitchenTicket().then(function (has) {
+        if (!has) return;
+        var btns = summary.$summary_container && summary.$summary_container.find(".summary-btns");
+        if (btns && btns.length && !btns.find(".nz-kitchen-btn").length) {
+          var btn = $('<div class="summary-btn btn btn-default nz-kitchen-btn"></div>').text(__("Kitchen"));
+          btn.on("click", function () { printKitchenTicket(summary.doc); });
+          btns.append(btn);
+        }
+        if (afterSubmission && summary.print_receipt_on_order_complete) {
+          // the receipt printed a moment ago; the kitchen copy follows
+          setTimeout(function () { printKitchenTicket(doc); }, 400);
+        }
+      });
+      return result;
+    };
+    pos.prototype.__nzKitchenHooked = true;
+  }
+
+  $(document).on("app_ready", hookTill);
+  $(document).on("page-change", hookTill);
+  $(function () { setTimeout(hookTill, 1200); });
+
   $(document).on("app_ready", addNavbarButton);
   $(document).on("page-change", addNavbarButton); // re-add if the navbar is ever rebuilt
   $(function () { setTimeout(addNavbarButton, 800); });

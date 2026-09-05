@@ -24,3 +24,4 @@
 .nz-proposal { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--border-color, #ededed); border-radius: 10px; background: var(--fg-color, #fff); }
 .nz-proposal ul { margin: 6px 0 8px 18px; padding: 0; font-size: 13px; }
 .nz-proposal button { font-size: 12px; }
+.nz-kitchen-btn { margin-inline-start: 6px; }
