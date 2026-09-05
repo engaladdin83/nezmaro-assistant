@@ -7,5 +7,5 @@ app_license = "MIT"
 required_apps = ["frappe/erpnext"]
 
 # The whole app: one script and one stylesheet on every desk page.
-app_include_js = ["/assets/nezmaro_assistant/js/assistant.js"]
-app_include_css = ["/assets/nezmaro_assistant/css/assistant.css"]
+app_include_js = ["assistant.bundle.js"]
+app_include_css = ["assistant.bundle.css"]
