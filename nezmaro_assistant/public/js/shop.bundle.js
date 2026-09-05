@@ -13,6 +13,10 @@
 (function () {
   var CONFIG_CACHE_KEY = "nz_shop_options";
 
+  // Frappe's translation helper is present on desk pages and usually on
+  // website pages; a shop must render its buttons either way.
+  var t = typeof window.__ === "function" ? window.__ : function (s) { return s; };
+
   function shopOptions(then) {
     var cached = null;
     try {
@@ -45,6 +49,7 @@
     el.type = "button";
     el.className = "btn btn-primary w-100 nz-buy-now";
     el.textContent = label;
+    el.style.cssText = "margin-bottom:8px;";
     return el;
   }
 
@@ -75,19 +80,24 @@
     var note = document.createElement("div");
     note.className = "nz-buy-hint";
     note.textContent = message;
+    // The app ships no stylesheet on website pages, and an unstyled hint under
+    // a button reads as a broken page rather than an instruction.
+    note.style.cssText =
+      "margin-top:8px;padding:8px 10px;border-radius:8px;background:#fffbeb;" +
+      "border:1px solid #fde68a;color:#92400e;font-size:.9rem;";
     afterEl.parentNode.insertBefore(note, afterEl.nextSibling);
   }
 
   function mountProductPage() {
     var cartBtn = document.querySelector(".btn-add-to-cart, .btn-configure");
     if (!cartBtn || document.querySelector(".nz-buy-now")) return;
-    var buy = button(__("Buy now — cash on delivery"));
+    var buy = button(t("Buy now — cash on delivery"));
     buy.addEventListener("click", function () {
       var code = chosenVariant();
       if (!code && hasVariants()) {
         var configure = document.querySelector(".btn-configure");
         if (configure) configure.click();
-        hint(buy, __("Choose a colour and size, then press Buy now again."));
+        hint(buy, t("Choose a colour and size, then press Buy now again."));
         return;
       }
       code = code || pageItemCode();
@@ -104,7 +114,7 @@
       anchor = cards.length ? cards[0].querySelector("button, a") : null;
     }
     if (!anchor || document.querySelector(".nz-buy-now")) return;
-    var buy = button(__("Place order — cash on delivery"));
+    var buy = button(t("Place order — cash on delivery"));
     buy.addEventListener("click", function () {
       buy.disabled = true;
       frappe.call({
@@ -113,13 +123,13 @@
           var lines = (r && r.message) || [];
           if (!lines.length) {
             buy.disabled = false;
-            return hint(buy, __("Your cart is empty."));
+            return hint(buy, t("Your cart is empty."));
           }
           go(lines);
         },
         error: function () {
           buy.disabled = false;
-          hint(buy, __("Could not read your cart. Try again."));
+          hint(buy, t("Could not read your cart. Try again."));
         },
       });
     });

@@ -107,7 +107,12 @@ frappe.ready(function () {
   var submit = document.getElementById('nz-submit');
 
   function money(n) {
-    return format_currency(n, currency);
+    // The desk always has format_currency; a website page may not, and a
+    // shopper must never be shown "undefined" where a price belongs.
+    if (typeof format_currency === 'function') return format_currency(n, currency);
+    return currency + ' ' + Number(n || 0).toLocaleString('en-EG', {
+      minimumFractionDigits: 2, maximumFractionDigits: 2
+    });
   }
   function paint() {
     var opt = gov.options[gov.selectedIndex];
