@@ -101,19 +101,35 @@
     setTimeout(function () { dialog.fields_dict.question.$input && dialog.fields_dict.question.$input.focus(); }, 200);
   }
 
+  // A speech bubble with a spark: the assistant's mark everywhere it appears.
+  var ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M4 5h16v11H9l-5 4V5z"></path><path d="M14.5 7.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9z"></path></svg>';
+  var LABEL = (frappe.boot && frappe.boot.lang === "ar") ? "اسأل Nezmaro" : "Ask Nezmaro";
+
   function addNavbarButton() {
-    if ($(".nz-ask-nav").length) return;
     // The header holds TWO .navbar-nav lists: #navbar-breadcrumbs on the left,
     // which Frappe empties on every route change (an item put there vanishes
     // at once), and the icon cluster on the right (bell, help, user). Ours
-    // goes first in the right-hand list.
-    var nav = $("header .navbar ul.navbar-nav").not("#navbar-breadcrumbs").last();
-    if (!nav.length) return;
-    var item = $('<li class="nav-item nz-ask-nav"><a class="nav-link" href="#" title="' + __("Ask Nezmaro") + '">' +
-      '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"></path></svg>' +
-      '<span class="nz-ask-label">' + __("Ask") + "</span></a></li>");
-    item.on("click", function (e) { e.preventDefault(); open(); });
-    nav.prepend(item);
+    // goes first in the right-hand list, as a filled pill so it is seen.
+    // The <header> element IS the .navbar (0.1.0-0.1.2 looked for a .navbar
+    // inside it and found nothing, so the item was never added).
+    if (!$(".nz-ask-nav").length) {
+      var nav = $("header.navbar ul.navbar-nav").not("#navbar-breadcrumbs").last();
+      if (nav.length) {
+        var item = $('<li class="nav-item nz-ask-nav"><a class="nz-ask-pill" href="#"></a></li>');
+        item.find("a").attr("title", LABEL).append(ICON).append($('<span class="nz-ask-label"></span>').text(LABEL));
+        item.on("click", function (e) { e.preventDefault(); open(); });
+        nav.prepend(item);
+      }
+    }
+    // And a floating button at the corner of every desk page: visible on
+    // phones too, where the navbar has no room for a label.
+    if (!$(".nz-ask-fab").length) {
+      var fab = $('<button type="button" class="nz-ask-fab"></button>');
+      fab.attr("title", LABEL).append(ICON).append($('<span class="nz-ask-fab-label"></span>').text(LABEL));
+      fab.on("click", function () { open(); });
+      $("body").append(fab);
+    }
   }
 
   $(document).on("app_ready", addNavbarButton);

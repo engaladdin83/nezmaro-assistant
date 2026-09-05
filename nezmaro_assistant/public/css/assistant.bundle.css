@@ -1,5 +1,18 @@
-.nz-ask-nav .nav-link { display: flex; align-items: center; gap: 6px; }
-.nz-ask-label { font-size: 13px; }
+/* Ask Nezmaro — the entrance (a pill in the navbar, a floating button on every page) and the dialog. */
+.nz-ask-nav { display: flex; align-items: center; margin-right: 8px; }
+.nz-ask-pill { display: inline-flex; align-items: center; gap: 7px; padding: 6px 14px; border-radius: 999px;
+  background: #1E40AF; color: #fff !important; font-weight: 600; font-size: 13px; text-decoration: none !important;
+  box-shadow: 0 2px 8px rgba(30, 64, 175, .25); transition: transform .12s ease, box-shadow .12s ease; }
+.nz-ask-pill:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(30, 64, 175, .35); }
+.nz-ask-fab { position: fixed; right: 22px; bottom: 22px; z-index: 1030; display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 18px 12px 14px; border: 0; border-radius: 999px; background: linear-gradient(135deg, #1E40AF, #3B82F6);
+  color: #fff; font-weight: 700; font-size: 14px; box-shadow: 0 10px 24px rgba(30, 64, 175, .35); cursor: pointer;
+  animation: nz-pop .45s ease-out; transition: transform .12s ease, box-shadow .12s ease; }
+.nz-ask-fab:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(30, 64, 175, .42); }
+@keyframes nz-pop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+[dir="rtl"] .nz-ask-fab { right: auto; left: 22px; }
+@media (max-width: 767px) { .nz-ask-pill .nz-ask-label { display: none; } .nz-ask-pill { padding: 6px 9px; } .nz-ask-fab-label { display: none; } .nz-ask-fab { padding: 12px; } }
+@media print { .nz-ask-fab, .nz-ask-nav { display: none !important; } }
 .nz-log { display: flex; flex-direction: column; gap: 10px; max-height: 50vh; overflow-y: auto; padding: 4px 0 10px; }
 .nz-msg { padding: 10px 12px; border-radius: 10px; max-width: 92%; line-height: 1.55; white-space: pre-wrap; font-size: 13px; }
 .nz-you { align-self: flex-end; background: var(--bg-light-blue, #eef5fd); }
