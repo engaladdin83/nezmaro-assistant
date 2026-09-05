@@ -3,8 +3,9 @@ plane with this site's own credentials, and hand the answer back.
 
 Credentials come from site_config.json (written by the control plane at
 provisioning): nezmaro_assistant_url, nezmaro_tenant_id,
-nezmaro_assistant_token. They never reach the browser. The control plane can
-only READ this site (its read-only tool); nothing here writes anything.
+nezmaro_assistant_token. They never reach the browser. `ask` only reads;
+`act` (0.1.4) hands back a proposal the user confirmed on screen — the control
+plane verifies its signature and writes the document with the site's keys.
 """
 
 import frappe
@@ -61,4 +62,32 @@ def ask(question, route=None, page_title=None, error_text=None, lang=None):
         "lang": data.get("lang", "en"),
         "links": data.get("links", []),
         "sources": data.get("sources", []),
+        "proposals": data.get("proposals", []),
     }
+
+
+@frappe.whitelist()
+def act(action, payload, token):
+    """The user pressed the confirm button on a proposal."""
+    url = frappe.conf.get("nezmaro_assistant_url")
+    site_token = frappe.conf.get("nezmaro_assistant_token")
+    tenant_id = frappe.conf.get("nezmaro_tenant_id")
+    if not (url and site_token and tenant_id):
+        frappe.throw(_("The assistant is not set up for this site yet."))
+    if isinstance(payload, str):
+        payload = frappe.parse_json(payload)
+    body = {
+        "tenant_id": tenant_id,
+        "site_token": site_token,
+        "action": action,
+        "payload": payload,
+        "token": token,
+        "user": frappe.session.user,
+    }
+    try:
+        response = requests.post(url.rstrip("/") + "/act", json=body, timeout=TIMEOUT_SECONDS)
+    except requests.RequestException:
+        frappe.throw(_("The assistant could not be reached. Try again in a moment."))
+    if response.status_code != 200:
+        frappe.throw(_("The assistant is unavailable right now ({0}).").format(response.status_code))
+    return response.json()

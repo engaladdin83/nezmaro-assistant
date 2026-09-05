@@ -21,3 +21,6 @@
 .nz-links { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .nz-links a { font-size: 12px; font-weight: 600; border: 1px solid var(--border-color, #ededed); border-radius: 999px; padding: 3px 10px; text-decoration: none; }
 .nz-sources { font-size: 11px; color: var(--text-muted, #74808b); margin-top: 6px; }
+.nz-proposal { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--border-color, #ededed); border-radius: 10px; background: var(--fg-color, #fff); }
+.nz-proposal ul { margin: 6px 0 8px 18px; padding: 0; font-size: 13px; }
+.nz-proposal button { font-size: 12px; }

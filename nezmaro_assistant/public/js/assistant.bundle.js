@@ -24,10 +24,43 @@
   var dialog = null;
   var log = null;
 
-  function addMessage(kind, text, links, sources) {
+  // 0.1.4: a proposal the assistant made — shown with its lines and a confirm
+  // button; pressing it writes the document through the control plane.
+  function proposalCard(p) {
+    var card = $('<div class="nz-proposal"></div>');
+    card.append($("<b></b>").text(p.title));
+    var ul = $("<ul></ul>");
+    (p.lines || []).forEach(function (line) { ul.append($("<li></li>").text(line)); });
+    card.append(ul);
+    var btn = $('<button type="button" class="btn btn-primary btn-sm"></button>').text(__("Do it"));
+    var out = $('<div class="nz-sources"></div>');
+    btn.on("click", function () {
+      btn.prop("disabled", true); out.text(__("Working…"));
+      frappe.call({
+        method: "nezmaro_assistant.api.act",
+        args: { action: p.action, payload: JSON.stringify(p.payload), token: p.token },
+        freeze: false,
+        callback: function (r) {
+          var m = r.message || {};
+          out.text(m.message || "");
+          if (m.ok && m.url) {
+            out.append(" ").append($("<a></a>").attr({ href: m.url, target: "_blank", rel: "noopener" }).text(__("Open") + " " + m.name));
+          } else {
+            btn.prop("disabled", false);
+          }
+        },
+        error: function () { out.text(__("Sorry — that did not go through.")); btn.prop("disabled", false); }
+      });
+    });
+    card.append(btn).append(out);
+    return card;
+  }
+
+  function addMessage(kind, text, links, sources, proposals) {
     var box = $('<div class="nz-msg"></div>').addClass("nz-" + kind);
     if (/[؀-ۿ]/.test(text)) box.attr("dir", "rtl");
     box.text(text);
+    (proposals || []).forEach(function (p) { box.append(proposalCard(p)); });
     if (links && links.length) {
       var row = $('<div class="nz-links"></div>');
       links.forEach(function (l) {
@@ -60,7 +93,7 @@
       freeze: false,
       callback: function (r) {
         var m = r.message || {};
-        addMessage("bot", m.answer || __("No answer came back."), m.links, m.sources);
+        addMessage("bot", m.answer || __("No answer came back."), m.links, m.sources, m.proposals);
       },
       error: function () {
         addMessage("bot", __("Sorry — the assistant is unavailable right now."));
