@@ -1,0 +1,224 @@
+{% extends "templates/web.html" %}
+
+{% block title %}{{ _("Complete your order") }}{% endblock %}
+
+{% block page_content %}
+<div class="nz-order">
+  {% if error %}
+    <div class="nz-order-card nz-order-empty">
+      <h1>{{ _("Nothing to order") }}</h1>
+      <p>{{ error }}</p>
+      <a class="nz-order-btn" href="/all-products">{{ _("Browse the shop") }}</a>
+    </div>
+  {% else %}
+  <h1 class="nz-order-title">{{ _("Complete your order") }}</h1>
+  <p class="nz-order-sub">{{ _("Cash on delivery. Pay the courier when it arrives.") }}</p>
+
+  <div class="nz-order-grid">
+    <form class="nz-order-card nz-order-form" id="nz-order-form" autocomplete="on">
+      <label for="nz-name">{{ _("Your name") }}</label>
+      <input id="nz-name" name="full_name" type="text" required autocomplete="name"
+             placeholder="{{ _('The name the courier should ask for') }}">
+
+      <label for="nz-phone">{{ _("Mobile number") }}</label>
+      <input id="nz-phone" name="phone" type="tel" required autocomplete="tel"
+             inputmode="numeric" placeholder="01012345678">
+      <small class="nz-order-hint">{{ _("We call this number to confirm your order.") }}</small>
+
+      <label for="nz-gov">{{ _("Governorate") }}</label>
+      <select id="nz-gov" name="governorate" required>
+        <option value="">{{ _("Choose your governorate") }}</option>
+        {% for g in governorates %}
+          <option value="{{ g.name }}" data-fee="{{ g.fee }}">{{ _(g.name) }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="nz-address">{{ _("Address") }}</label>
+      <textarea id="nz-address" name="address" rows="3" required autocomplete="street-address"
+                placeholder="{{ _('Street, building number, flat, landmark') }}"></textarea>
+
+      <label for="nz-notes">{{ _("Anything we should know?") }} <span class="nz-order-opt">{{ _("optional") }}</span></label>
+      <textarea id="nz-notes" name="notes" rows="2"
+                placeholder="{{ _('A preferred delivery time, another colour, a gift note') }}"></textarea>
+
+      <button type="submit" class="nz-order-btn nz-order-submit" id="nz-submit">
+        {{ _("Confirm order") }}
+      </button>
+      <div class="nz-order-error" id="nz-error" hidden></div>
+      {% if note %}<p class="nz-order-note">{{ note }}</p>{% endif %}
+    </form>
+
+    <aside class="nz-order-card nz-order-summary">
+      <h2>{{ _("Your order") }}</h2>
+      {% for line in lines %}
+        <div class="nz-order-line">
+          {% if line.image %}<img src="{{ line.image }}" alt="{{ line.item_name }}">{% endif %}
+          <div class="nz-order-line-text">
+            <span class="nz-order-line-name">{{ line.item_name }}</span>
+            <span class="nz-order-line-qty">{{ _("Quantity") }}: {{ line.qty }}</span>
+          </div>
+          <span class="nz-order-line-amount">{{ frappe.utils.fmt_money(line.amount, currency=currency) }}</span>
+        </div>
+      {% endfor %}
+      <div class="nz-order-row">
+        <span>{{ _("Items") }}</span>
+        <span id="nz-goods">{{ frappe.utils.fmt_money(goods_total, currency=currency) }}</span>
+      </div>
+      <div class="nz-order-row">
+        <span>{{ _("Delivery") }}</span>
+        <span id="nz-fee">{{ _("Choose a governorate") }}</span>
+      </div>
+      <div class="nz-order-row nz-order-total">
+        <span>{{ _("Total") }}</span>
+        <span id="nz-total">{{ frappe.utils.fmt_money(goods_total, currency=currency) }}</span>
+      </div>
+      {% if free_over %}
+        <p class="nz-order-hint">{{ _("Free delivery over {0}").format(frappe.utils.fmt_money(free_over, currency=currency)) }}</p>
+      {% endif %}
+      {% if whatsapp %}
+        <a class="nz-order-wa" href="https://wa.me/{{ whatsapp }}" target="_blank" rel="noopener">
+          {{ _("Prefer WhatsApp? Message us") }}
+        </a>
+      {% endif %}
+    </aside>
+  </div>
+
+  <div class="nz-order-card nz-order-done" id="nz-done" hidden>
+    <h1>{{ _("Order received") }}</h1>
+    <p class="nz-order-done-num" id="nz-done-num"></p>
+    <p>{{ _("We will call you shortly to confirm. Pay the courier on delivery.") }}</p>
+    <a class="nz-order-btn" href="/all-products">{{ _("Keep shopping") }}</a>
+  </div>
+  {% endif %}
+</div>
+
+<script>
+frappe.ready(function () {
+  var form = document.getElementById('nz-order-form');
+  if (!form) return;
+  var goods = {{ goods_total or 0 }};
+  var currency = {{ (currency or 'EGP') | tojson }};
+  var freeOver = {{ free_over or 0 }};
+  var lines = {{ (lines or []) | tojson }};
+  var gov = document.getElementById('nz-gov');
+  var feeEl = document.getElementById('nz-fee');
+  var totalEl = document.getElementById('nz-total');
+  var errEl = document.getElementById('nz-error');
+  var submit = document.getElementById('nz-submit');
+
+  function money(n) {
+    return format_currency(n, currency);
+  }
+  function paint() {
+    var opt = gov.options[gov.selectedIndex];
+    if (!opt || !opt.value) {
+      feeEl.textContent = "{{ _('Choose a governorate') }}";
+      totalEl.textContent = money(goods);
+      return;
+    }
+    var fee = parseFloat(opt.getAttribute('data-fee')) || 0;
+    if (freeOver && goods >= freeOver) fee = 0;
+    feeEl.textContent = fee ? money(fee) : "{{ _('Free') }}";
+    totalEl.textContent = money(goods + fee);
+  }
+  gov.addEventListener('change', paint);
+  paint();
+
+  function fail(message) {
+    errEl.textContent = message;
+    errEl.hidden = false;
+    submit.disabled = false;
+    submit.textContent = "{{ _('Confirm order') }}";
+    errEl.scrollIntoView({behavior: 'smooth', block: 'center'});
+  }
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    errEl.hidden = true;
+    submit.disabled = true;
+    submit.textContent = "{{ _('Placing your order…') }}";
+    frappe.call({
+      method: 'nezmaro_assistant.checkout.place_order',
+      args: {
+        full_name: form.full_name.value,
+        phone: form.phone.value,
+        governorate: form.governorate.value,
+        address: form.address.value,
+        notes: form.notes.value,
+        items: JSON.stringify(lines.map(function (l) {
+          return {item_code: l.item_code, qty: l.qty};
+        }))
+      },
+      callback: function (r) {
+        if (!r || !r.message || !r.message.order) {
+          return fail("{{ _('Something went wrong. Please message us on WhatsApp.') }}");
+        }
+        document.getElementById('nz-done-num').textContent =
+          "{{ _('Your order number is') }} " + r.message.order;
+        document.querySelector('.nz-order-grid').hidden = true;
+        document.querySelector('.nz-order-title').hidden = true;
+        document.querySelector('.nz-order-sub').hidden = true;
+        document.getElementById('nz-done').hidden = false;
+        window.scrollTo({top: 0, behavior: 'smooth'});
+      },
+      error: function (r) {
+        var message = "{{ _('We could not place the order. Check your details and try again.') }}";
+        try {
+          var server = JSON.parse(r._server_messages || '[]');
+          if (server.length) message = JSON.parse(server[0]).message;
+        } catch (e) { /* keep the friendly default */ }
+        fail(message);
+      }
+    });
+  });
+});
+</script>
+
+<style>
+.nz-order { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+.nz-order-title { font-size: 1.9rem; margin: 0 0 4px; }
+.nz-order-sub { color: #6b7280; margin: 0 0 24px; }
+.nz-order-grid { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; align-items: start; }
+.nz-order-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 20px; }
+.nz-order-form label { display: block; font-weight: 600; margin: 14px 0 6px; font-size: .95rem; }
+.nz-order-form label:first-child { margin-top: 0; }
+.nz-order-form input, .nz-order-form select, .nz-order-form textarea {
+  width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 10px;
+  font-size: 1rem; font-family: inherit; background: #fff;
+}
+.nz-order-form input:focus, .nz-order-form select:focus, .nz-order-form textarea:focus {
+  outline: 2px solid rgba(0,0,0,.15); border-color: #9ca3af;
+}
+.nz-order-opt { font-weight: 400; color: #9ca3af; font-size: .85rem; }
+.nz-order-hint { display: block; color: #6b7280; font-size: .85rem; margin-top: 6px; }
+.nz-order-btn {
+  display: inline-block; width: 100%; text-align: center; margin-top: 20px; padding: 14px 18px;
+  border: 0; border-radius: 10px; background: #111827; color: #fff; font-size: 1.05rem;
+  font-weight: 600; cursor: pointer; text-decoration: none;
+}
+.nz-order-btn:hover { opacity: .92; color: #fff; }
+.nz-order-btn:disabled { opacity: .6; cursor: default; }
+.nz-order-error {
+  margin-top: 12px; padding: 12px; border-radius: 10px;
+  background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; font-size: .95rem;
+}
+.nz-order-note { margin-top: 14px; color: #6b7280; font-size: .9rem; }
+.nz-order-summary h2 { font-size: 1.1rem; margin: 0 0 14px; }
+.nz-order-line { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; }
+.nz-order-line img { width: 56px; height: 72px; object-fit: cover; border-radius: 8px; }
+.nz-order-line-text { display: flex; flex-direction: column; flex: 1; }
+.nz-order-line-name { font-weight: 600; font-size: .95rem; }
+.nz-order-line-qty { color: #6b7280; font-size: .85rem; }
+.nz-order-line-amount { font-weight: 600; white-space: nowrap; }
+.nz-order-row { display: flex; justify-content: space-between; padding: 8px 0; border-top: 1px solid #f3f4f6; }
+.nz-order-total { font-size: 1.15rem; font-weight: 700; border-top: 2px solid #e5e7eb; margin-top: 4px; }
+.nz-order-wa { display: block; margin-top: 16px; text-align: center; font-size: .9rem; }
+.nz-order-done { text-align: center; }
+.nz-order-done-num { font-size: 1.25rem; font-weight: 700; margin: 12px 0; }
+.nz-order-empty { text-align: center; }
+@media (max-width: 800px) {
+  .nz-order-grid { grid-template-columns: 1fr; }
+  .nz-order-summary { order: -1; }
+}
+</style>
+{% endblock %}
