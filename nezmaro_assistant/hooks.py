@@ -14,3 +14,12 @@ app_include_css = ["assistant.bundle.css"]
 # cash-on-delivery Buy-now button the webshop has no notion of. The checkout
 # page itself (/order) carries its own styling and skips this script.
 web_include_js = ["shop.bundle.js"]
+
+# 0.1.7: the plan's user cap, enforced on the site too. The control plane writes
+# `max_users` into site_config; until this hook nothing read it, so users created
+# from the desk were never counted. See seats.py.
+doc_events = {
+    "User": {
+        "validate": "nezmaro_assistant.seats.enforce_seat_cap",
+    },
+}

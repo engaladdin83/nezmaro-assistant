@@ -14,6 +14,18 @@ written by the control plane at provisioning). The control plane answers
 from the Nezmaro manual and, for data questions, reads the site through its
 read-only tool. Nothing here writes to the ERP.
 
+## Seats (0.1.7)
+
+`seats.py` refuses, on the site itself, a save that would give the tenant more
+active desk users than the plan allows. The cap is the `max_users` the control
+plane already writes into `site_config.json` at provisioning and on every plan
+change -- until this hook nothing in Frappe read it, so users created from the
+desk were never counted. The rule is the control panel's: an invited accountant
+(only "Accountant (read)", plus "Desk User") is not a seat, till staff are, and
+Administrator and Guest never count. Only a save that ADDS a seat is refused, so
+a site already over its cap after a downgrade keeps working -- it just cannot
+grow. Installs, migrations, patches and the setup wizard are never blocked.
+
 ## The shop half (0.1.6)
 
 The same app also carries the **cash-on-delivery checkout** an Egyptian online
