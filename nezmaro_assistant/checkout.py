@@ -75,6 +75,20 @@ def _enabled(config: dict) -> bool:
     return bool(config.get("enabled")) and bool(_governorates(config))
 
 
+def _known_governorate(config: dict, governorate) -> str:
+    """The shopper's governorate, only if the shop delivers there.
+
+    Both guest-callable methods ask this. `quote` used to skip it and answered a
+    made-up destination from `default_fee`, a number no delivery ever charged
+    (0.1.8)."""
+    governorate = str(governorate or "").strip()
+    if not any(
+        str(row.get("name")).strip().lower() == governorate.lower() for row in _governorates(config)
+    ):
+        frappe.throw(_("Choose your governorate from the list."))
+    return governorate
+
+
 @frappe.whitelist(allow_guest=True)
 def options() -> dict:
     """What the checkout form needs to draw itself. No secrets, no documents."""
@@ -312,11 +326,7 @@ def place_order(
     street = str(address or "").strip()
     if len(street) < 10:
         frappe.throw(_("Enter the full address: street, building and flat."))
-    governorate = str(governorate or "").strip()
-    if not any(
-        str(row.get("name")).strip().lower() == governorate.lower() for row in _governorates(config)
-    ):
-        frappe.throw(_("Choose your governorate from the list."))
+    governorate = _known_governorate(config, governorate)
     phone = _clean_phone(phone)
     lines = _parse_lines(items, item_code, qty)
     _guard_rate_limits(phone)
@@ -422,7 +432,7 @@ def quote(governorate=None, item_code=None, qty=None, items=None) -> dict:
                 "amount": rate * line_qty,
             }
         )
-    fee = _fee_for(config, governorate) if governorate else 0.0
+    fee = _fee_for(config, _known_governorate(config, governorate)) if governorate else 0.0
     free_over = flt(config.get("free_over"))
     free = bool(free_over and goods_total >= free_over)
     if free:

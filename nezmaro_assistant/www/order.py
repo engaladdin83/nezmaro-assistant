@@ -24,12 +24,27 @@ def get_context(context):
     config = _config()
     context.shop_enabled = _enabled(config)
     context.currency = config.get("currency") or "EGP"
+    # 0.1.8: the page recomputes the total in the browser, where Frappe's formatter
+    # knows a currency's symbol only if the page seeds it -- the total read
+    # "EGP 2,065.00" under lines reading "1,995.00 ج.م". The currency's own symbol
+    # and side, for the page to seed.
+    symbol = frappe.db.get_value("Currency", context.currency, ["symbol", "symbol_on_right"], as_dict=True) or {}
+    context.currency_symbol = symbol.get("symbol") or context.currency
+    context.symbol_on_right = 1 if symbol.get("symbol_on_right") else 0
     context.note = config.get("note") or ""
     context.whatsapp = config.get("whatsapp") or ""
     context.free_over = config.get("free_over") or 0
-    context.governorates = [
-        {"name": row.get("name"), "fee": row.get("fee") or 0} for row in _governorates(config)
-    ]
+    # 0.1.8: the list read "Cairo, Giza, Alexandria" on an Arabic page. The shop's
+    # own Translation still wins; the Arabic name the shop typed on its Delivery
+    # page is the fallback, where the English name used to be.
+    arabic = str(getattr(frappe.local, "lang", "") or "").lower().startswith("ar")
+    context.governorates = []
+    for row in _governorates(config):
+        name = row.get("name")
+        label = _(name)
+        if label == name and arabic and row.get("name_ar"):
+            label = row.get("name_ar")
+        context.governorates.append({"name": name, "label": label, "fee": row.get("fee") or 0})
     context.lines = []
     context.goods_total = 0
     context.error = ""

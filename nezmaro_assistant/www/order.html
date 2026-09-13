@@ -29,7 +29,7 @@
       <select id="nz-gov" name="governorate" required>
         <option value="">{{ _("Choose your governorate") }}</option>
         {% for g in governorates %}
-          <option value="{{ g.name }}" data-fee="{{ g.fee }}">{{ _(g.name) }}</option>
+          <option value="{{ g.name }}" data-fee="{{ g.fee }}">{{ g.label }}</option>
         {% endfor %}
       </select>
 
@@ -98,6 +98,16 @@ frappe.ready(function () {
   if (!form) return;
   var goods = {{ goods_total or 0 }};
   var currency = {{ (currency or 'EGP') | tojson }};
+  var symbol = {{ (currency_symbol or currency or 'EGP') | tojson }};
+  var symbolOnRight = {{ 1 if symbol_on_right else 0 }};
+  // Frappe's formatter reads locals[":Currency"], which no website page fills,
+  // so the total read "EGP 2,065.00" under lines reading "1,995.00 ج.م". Seeded
+  // from the currency itself, and never over a value the page already carries.
+  window.locals = window.locals || {};
+  locals[":Currency"] = locals[":Currency"] || {};
+  if (!locals[":Currency"][currency]) {
+    locals[":Currency"][currency] = { symbol: symbol, symbol_on_right: symbolOnRight };
+  }
   var freeOver = {{ free_over or 0 }};
   var lines = {{ (lines or []) | tojson }};
   var gov = document.getElementById('nz-gov');
@@ -110,9 +120,10 @@ frappe.ready(function () {
     // The desk always has format_currency; a website page may not, and a
     // shopper must never be shown "undefined" where a price belongs.
     if (typeof format_currency === 'function') return format_currency(n, currency);
-    return currency + ' ' + Number(n || 0).toLocaleString('en-EG', {
+    var amount = Number(n || 0).toLocaleString('en-EG', {
       minimumFractionDigits: 2, maximumFractionDigits: 2
     });
+    return symbolOnRight ? amount + ' ' + symbol : symbol + ' ' + amount;
   }
   function paint() {
     var opt = gov.options[gov.selectedIndex];

@@ -14,6 +14,52 @@ written by the control plane at provisioning). The control plane answers
 from the Nezmaro manual and, for data questions, reads the site through its
 read-only tool. Nothing here writes to the ERP.
 
+## The storefront in the shop's language (0.1.8)
+
+Webshop draws the product list, the variant dialog and the cart in JavaScript,
+so no Translation record reaches them and an Arabic shop still said OFF, Search
+for Products and Select Variant. `storefront.py` (an `update_website_context`
+hook, shops only, any language but English) adds one script to the page head
+that, once the page has loaded, merges a message dictionary UNDER whatever the
+page already holds -- a tenant's own wording always wins. Webshop ships no
+Arabic, so `translations/ar.csv` carries it, together with this app's own order
+page and checkout messages; a tenant's Translation records still take priority.
+It only ADDS Arabic where the engine has none: an app installed after frappe and
+erpnext overrides their translation of the same word everywhere, desk included,
+so the 26 storefront words the engine already translates ("Submit", "Total",
+"Items", ...) are left to the engine's wording, or the tenant's own.
+
+The order page also stops reading "EGP 2,065.00" under lines that read
+"1,995.00 ج.م": it passes the currency's symbol and side into the page and seeds
+Frappe's formatter with them, never overwriting a value the page already has.
+On an Arabic page its governorate list shows the Arabic names the shop typed on
+its Delivery page (a Translation record of the shop's own still wins), and the
+value posted stays the English name the checkout validates.
+
+`quote` now refuses a governorate the shop does not deliver to, with the same
+words as `place_order`. It used to answer a made-up destination from
+`default_fee`, a number no real delivery ever charged.
+
+## The customer statement (0.1.8, #81)
+
+A **Send statement** button on the Customer page opens one dialog: a month (last
+month by default), by email, on WhatsApp, or both, and a Preview of the PDF. The
+statement is the month's: the opening balance brought forward, the month's
+transactions, the closing balance -- the owner's decisions of 2026-09-13.
+
+`statement.py` does not rebuild a report. The rows are ERPNext's own General
+Ledger report for the customer, consolidated by voucher, drawn in ERPNext's own
+statement-of-accounts template with the company's default letter head. The one
+deliberate difference: the engine's Process Statement Of Accounts skips a
+customer with no entries in the period; a customer who still owes last month's
+balance gets a statement here, opening and closing lines only.
+
+The user's own permissions decide (Customer read and GL Entry read). Email goes
+through the site's own outgoing account and says so when there is none. WhatsApp
+needs the tenant's Meta token, which only the control plane holds: the finished
+PDF is posted to `/assistant/site/statement` with the site's own token, and the
+control plane sends it with the tenant's approved document template.
+
 ## Seats (0.1.7)
 
 `seats.py` refuses, on the site itself, a save that would give the tenant more

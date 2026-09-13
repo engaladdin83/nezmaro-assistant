@@ -23,3 +23,11 @@ doc_events = {
         "validate": "nezmaro_assistant.seats.enforce_seat_cap",
     },
 }
+
+# 0.1.8: the storefront's browser-drawn words in the shop's own language (a
+# message dictionary merged UNDER the page's own), shops only. See storefront.py.
+update_website_context = ["nezmaro_assistant.storefront.add_message_dictionary"]
+
+# 0.1.8 (#81): a "Send statement" button on the Customer page -- the month's
+# statement of account by email and on WhatsApp. See statement.py.
+doctype_js = {"Customer": "public/js/customer_statement.js"}
