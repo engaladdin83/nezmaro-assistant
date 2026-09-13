@@ -14,6 +14,16 @@ written by the control plane at provisioning). The control plane answers
 from the Nezmaro manual and, for data questions, reads the site through its
 read-only tool. Nothing here writes to the ERP.
 
+## Sending a statement is POST only (0.1.9)
+
+`statement.send_statement` is whitelisted for POST only. A bare
+`@frappe.whitelist()` also answers GET, and Frappe checks the CSRF token only on
+POST, PUT, DELETE and PATCH, so a crafted link opened by a logged-in user could
+have sent a customer's statement to any WhatsApp number (found by the live
+verification of 0.1.8, 2026-09-13; latent, no tenant had WhatsApp sending on).
+The Send statement dialog already POSTs through `frappe.call`, and
+`download_statement` keeps GET because the Preview opens the PDF in a new tab.
+
 ## The storefront in the shop's language (0.1.8)
 
 Webshop draws the product list, the variant dialog and the cart in JavaScript,

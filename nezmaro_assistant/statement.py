@@ -164,7 +164,11 @@ def download_statement(customer, month):
     frappe.local.response.type = "download"
 
 
-@frappe.whitelist()
+# POST only (0.1.9). A bare whitelist also answers GET, and Frappe checks the CSRF
+# token only on POST/PUT/DELETE/PATCH: a crafted link opened by a logged-in user
+# could have sent a customer's statement to any WhatsApp number (found by the live
+# verification, 2026-09-13). The dialog already POSTs through frappe.call.
+@frappe.whitelist(methods=["POST"])
 def send_statement(customer, month, email=None, mobile=None):
     """The Send button. Each channel answers for itself: an email that went out is
     not undone because WhatsApp was not set up."""
