@@ -32,6 +32,29 @@ letter on a colour taken from its name. Labels are `__(title)`, so an Arabic des
 shows the sidebar's own Arabic words; the launcher's own few words live in the
 script, not in `translations/ar.csv`, so they cannot override the engine's.
 
+### Icons, the app you are in, and the sidebar (0.2.1)
+
+The launcher's icons are 26 SVG files in `public/icons/apps/`, served from
+`/assets/nezmaro_assistant/icons/apps/<name>.svg?v=<ICON_VERSION>` (the host caches
+`/assets` for a year, so bump `ICON_VERSION` whenever a drawing changes). They were
+generated on 2026-09-26 as one set with Recraft V4.1 in vector mode through Higgsfield
+(one prompt style, a fixed five-colour palette), and five were redrawn until they read
+at a glance. The generator's output was already vector, so no Adobe vectorising step
+was needed. Each file was cleaned before it was committed: the full-canvas white square
+(it would show as a white box on a dark tile) and the embedded C2PA content-credentials
+block (most of each file's size) were removed. This paragraph is where the files' AI
+origin is recorded now.
+
+The same icons appear in two more places. Beside the logo on every page, the app
+you are in: its icon and name, taken from the route on a desk and from Frappe's own
+breadcrumb record elsewhere (a Sales Order list says Selling, Stock Balance says
+Stock); a page that belongs to no workspace shows none. The launcher follows
+`frappe.breadcrumbs.update`, because a report sets its breadcrumb after the page has
+changed. And in the sidebar, where each workspace's grey line icon is replaced,
+children included (Payables, Receivables, Financial Reports under Accounting). The
+sidebar is repainted by a MutationObserver on a short timer, not requestAnimationFrame,
+which never runs in a background tab (measured on the live desk).
+
 ## Sending a statement is POST only (0.1.9)
 
 `statement.send_statement` is whitelisted for POST only. A bare

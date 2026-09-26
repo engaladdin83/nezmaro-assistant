@@ -1,4 +1,5 @@
-/* Nezmaro Apps (0.2.0) — the nine-dot navbar button and the home screen of big app icons. */
+/* Nezmaro Apps (0.2.0; icons, app header and sidebar 0.2.1) — the nine-dot navbar button,
+   the home screen of big app icons, the current app beside the logo, colourful sidebar icons. */
 .nz-apps-nav { display: flex; align-items: center; margin-right: 8px; }
 .nz-apps-btn { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; color: #1E40AF !important;
   border: 1px solid var(--border-color, #ededed); background: var(--card-bg, #fff); text-decoration: none !important;
@@ -31,7 +32,7 @@ body.nz-launch-open { overflow: hidden; }
   text-decoration: none !important; color: var(--nz-text) !important; outline: none; }
 .nz-app-tile { width: 96px; height: 96px; border-radius: 22px; background: var(--nz-card); display: grid; place-items: center;
   box-shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 6px 16px rgba(16, 24, 40, .08); transition: transform .15s ease, box-shadow .15s ease; }
-.nz-app-tile svg { width: 60px; height: 60px; }
+.nz-app-tile svg, .nz-app-img { width: 66px; height: 66px; display: block; }
 .nz-app:hover .nz-app-tile, .nz-app:focus-visible .nz-app-tile { transform: translateY(-3px);
   box-shadow: 0 2px 4px rgba(16, 24, 40, .08), 0 14px 28px rgba(30, 64, 175, .18); }
 .nz-app:focus-visible .nz-app-tile { outline: 3px solid #3B82F6; outline-offset: 3px; }
@@ -46,7 +47,28 @@ body.nz-launch-open { overflow: hidden; }
   .nz-launch-find { min-width: 0; width: 100%; }
   .nz-launch-apps { grid-template-columns: repeat(3, 1fr); gap: 20px 6px; }
   .nz-app-tile { width: 78px; height: 78px; border-radius: 18px; }
-  .nz-app-tile svg, .nz-app-letter { width: 48px; height: 48px; }
+  .nz-app-tile svg, .nz-app-img, .nz-app-letter { width: 52px; height: 52px; }
   .nz-app-name { font-size: 13px; }
 }
-@media print { .nz-launch, .nz-apps-nav { display: none !important; } }
+
+/* The app you are in, beside the logo (Odoo's "Sales" at the top-left). */
+.nz-apphead { display: inline-flex; align-items: center; gap: 8px; margin-inline: 4px 10px; padding: 4px 10px 4px 4px;
+  border-radius: 10px; text-decoration: none !important; color: var(--text-color, #1f272e) !important; white-space: nowrap;
+  transition: background .12s ease; }
+[dir="rtl"] .nz-apphead { padding: 4px 4px 4px 10px; }
+.nz-apphead[hidden] { display: none; }
+.nz-apphead:hover { background: var(--bg-light-blue, #eef5fd); }
+.nz-apphead-icon { width: 30px; height: 30px; display: grid; place-items: center; }
+.nz-apphead-img { width: 30px; height: 30px; display: block; }
+.nz-apphead-icon .nz-app-letter { width: 26px; height: 26px; border-radius: 8px; font-size: 14px; }
+.nz-apphead-name { font-size: 16px; font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
+
+/* Sidebar: the colourful icon in the slot of Frappe's line icon. */
+.sidebar-item-icon[data-nz] { display: inline-flex; align-items: center; justify-content: center; }
+.nz-side-img { width: 20px; height: 20px; display: block; }
+
+@media (max-width: 767px) {
+  .nz-apphead-name { display: none; }
+  .nz-apphead { padding: 4px; margin-inline: 2px 4px; }
+}
+@media print { .nz-launch, .nz-apps-nav, .nz-apphead { display: none !important; } }
