@@ -55,6 +55,11 @@ children included (Payables, Receivables, Financial Reports under Accounting). T
 sidebar is repainted by a MutationObserver on a short timer, not requestAnimationFrame,
 which never runs in a background tab (measured on the live desk).
 
+Since 0.2.4 Frappe's breadcrumb no longer repeats the app: its first crumb, when it links
+to the same workspace as the header (compared by link, so an Arabic desk matches too), is
+hidden from 768px, where the header shows the app's name. Below 768px the header is icon-only
+and the crumb is left alone (Frappe keeps only the last crumb below about 992px in any case).
+
 ## Sending a statement is POST only (0.1.9)
 
 `statement.send_statement` is whitelisted for POST only. A bare

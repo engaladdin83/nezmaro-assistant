@@ -248,13 +248,30 @@
     var key = currentWorkspaceKey();
     loadAll().then(function (all) {
       var page = findPage(all, key);
-      if (!page) { head.prop("hidden", true); return; }
+      if (!page) { head.prop("hidden", true); markDuplicateCrumb(null); return; }
       var label = __(page.title || page.name);
       head.attr({ href: routeFor(page), title: label });
       head.find(".nz-apphead-icon").html(iconFor(page, label, "nz-apphead-img"));
       head.find(".nz-apphead-name").text(label);
       head.prop("hidden", false);
+      markDuplicateCrumb(page, label);
     });
+  }
+
+  // 0.2.4: Frappe's breadcrumb starts with the same app ("Selling › Sales Order"
+  // beside "[icon] Selling"). Mark that first crumb; the stylesheet hides it only
+  // where the header shows its name (>= 768px), so the name never disappears.
+  function markDuplicateCrumb(page, label) {
+    var crumbs = $("#navbar-breadcrumbs > li");
+    crumbs.removeClass("nz-crumb-dup");
+    if (!page) return; // no header on this page: every crumb stays
+    var first = crumbs.first();
+    if (!first.length) return;
+    try {
+      var same = decodeURI(String(first.find("a").attr("href") || "")) === decodeURI(routeFor(page))
+        || $.trim(first.text()) === label;
+      if (same) first.addClass("nz-crumb-dup");
+    } catch (e) { /* a malformed link: leave the crumb as it is */ }
   }
 
   // The sidebar's grey line icons become the same colourful icons, children too

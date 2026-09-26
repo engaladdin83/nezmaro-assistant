@@ -63,6 +63,13 @@ body.nz-launch-open { overflow: hidden; }
 .nz-apphead-icon .nz-app-letter { width: 26px; height: 26px; border-radius: 8px; font-size: 14px; }
 .nz-apphead-name { font-size: 16px; font-weight: 600; max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
 
+/* 0.2.4: the breadcrumb's first crumb repeats the app the header names; hide it only
+   where the header shows the name (>= 768px). In practice that is >= ~992px, since below
+   that Frappe itself shows only the last crumb. Showing the header's name from 576px was
+   tried and measured: at 640px the navbar still fit, but the page crumb shrank to "Sales C"
+   and the search box to a sliver, so the header stays icon-only below 768px. */
+@media (min-width: 768px) { #navbar-breadcrumbs > li.nz-crumb-dup { display: none; } }
+
 /* Sidebar: the colourful icon in the slot of Frappe's line icon. */
 .sidebar-item-icon[data-nz] { display: inline-flex; align-items: center; justify-content: center; margin-inline-end: 6px; }
 .nz-side-img { width: 20px; height: 20px; display: block; }
