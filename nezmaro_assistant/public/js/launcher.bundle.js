@@ -164,7 +164,7 @@
     overlay.prop("hidden", false);
     $("body").addClass("nz-launch-open");
     $(".nz-apps-btn").attr("aria-expanded", "true");
-    openedRoute = frappe.get_route_str ? frappe.get_route_str() : "";
+    openedRoute = routeStr();
     loadPages().then(function (pages) {
       render(pages);
       // Not on a phone: the keyboard would cover the grid it is meant to find.
@@ -180,6 +180,12 @@
   }
 
   function isOpen() { return overlay && !overlay.prop("hidden"); }
+
+  // get_route_str() is frappe.router.current_route.join("/"), which throws before the
+  // router has routed; every read of the route as text goes through here.
+  function routeStr() {
+    try { return frappe.get_route_str ? frappe.get_route_str() : ""; } catch (e) { return ""; }
+  }
 
   var GRID = '<svg width="18" height="18" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">' +
     [1, 7.5, 14].map(function (y) {
@@ -215,12 +221,20 @@
 
   // Before the router has routed (at app_ready) get_route() returns null: measured on
   // the live desk, where reading [0] of it threw on every load (0.2.1).
+  // Not routed yet means no app yet: return before touching the breadcrumbs, whose
+  // current_page() calls get_route_str(), which throws on the same null route (0.2.2,
+  // measured live). The try is a floor: the header must never break a page.
   function currentWorkspaceKey() {
-    var route = (frappe.get_route && frappe.get_route()) || [];
-    if (route[0] === "Workspaces") return route[1] === "private" ? route[2] : route[1];
-    var bc = frappe.breadcrumbs && frappe.breadcrumbs.all && frappe.breadcrumbs.current_page
-      ? frappe.breadcrumbs.all[frappe.breadcrumbs.current_page()] : null;
-    return bc && bc.workspace ? bc.workspace : null;
+    try {
+      var route = (frappe.get_route && frappe.get_route()) || [];
+      if (!route.length) return null;
+      if (route[0] === "Workspaces") return route[1] === "private" ? route[2] : route[1];
+      var bc = frappe.breadcrumbs && frappe.breadcrumbs.all && frappe.breadcrumbs.current_page
+        ? frappe.breadcrumbs.all[frappe.breadcrumbs.current_page()] : null;
+      return bc && bc.workspace ? bc.workspace : null;
+    } catch (e) {
+      return null;
+    }
   }
 
   function updateAppHead() {
@@ -311,8 +325,8 @@
     setTimeout(updateAppHead, 50);
     setTimeout(updateAppHead, 600);
     if (landing) { setTimeout(function () { if (landing) land(); }, 60); return; }
-    if (!isOpen() || !frappe.get_route_str) return;
-    var now = frappe.get_route_str();
+    if (!isOpen()) return;
+    var now = routeStr();
     if (now === openedRoute) return;
     var route = (frappe.get_route && frappe.get_route()) || [];
     if (Date.now() < settleUntil && route[0] === "Workspaces") { openedRoute = now; return; }
