@@ -14,6 +14,24 @@ written by the control plane at provisioning). The control plane answers
 from the Nezmaro manual and, for data questions, reads the site through its
 read-only tool. Nothing here writes to the ERP.
 
+## The Apps home screen (0.2.0)
+
+A nine-dot button beside Ask Nezmaro in the navbar opens a home screen of big
+app icons, like Odoo's: a greeting, the date, a "find an app" box and one
+white rounded tile per workspace, the edition's own desk (Overview, Counter,
+Clinic, Shop, Service) first in Nezmaro blue. It opens by itself when the desk
+starts at the bare `/app`, which is where login lands; clicking an app, Esc,
+the button again or moving to another page closes it.
+
+`launcher.bundle.js` draws nothing the sidebar would not: it reads the same list
+(`frappe.boot.sidebar_pages`, else `get_workspace_sidebar_items`), top-level
+workspaces only, hidden ones left out even for a Workspace Manager, and builds
+each link with the sidebar's own route rule. Icons are chosen by workspace NAME
+(titles are retitled and translated); a workspace with no drawing gets its first
+letter on a colour taken from its name. Labels are `__(title)`, so an Arabic desk
+shows the sidebar's own Arabic words; the launcher's own few words live in the
+script, not in `translations/ar.csv`, so they cannot override the engine's.
+
 ## Sending a statement is POST only (0.1.9)
 
 `statement.send_statement` is whitelisted for POST only. A bare

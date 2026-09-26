@@ -6,9 +6,10 @@ app_email = "info@hdgcommunity.com"
 app_license = "MIT"
 required_apps = ["frappe/erpnext"]
 
-# The whole app: one script and one stylesheet on every desk page.
-app_include_js = ["assistant.bundle.js"]
-app_include_css = ["assistant.bundle.css"]
+# On every desk page: the assistant, and (0.2.0) the Apps home screen -- a
+# nine-dot navbar button and a grid of big app icons, opened at login.
+app_include_js = ["assistant.bundle.js", "launcher.bundle.js"]
+app_include_css = ["assistant.bundle.css", "launcher.bundle.css"]
 
 # M30: the shop half. One script on the WEBSITE pages, which adds the
 # cash-on-delivery Buy-now button the webshop has no notion of. The checkout
