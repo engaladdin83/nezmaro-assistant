@@ -23,7 +23,7 @@
   // Higgsfield, 2026-09-26) and shipped as files in public/icons/apps. The ?v= busts the
   // year-long browser cache the host gives /assets. Keyed by workspace NAME, never its
   // title: titles are retitled and translated.
-  var ICON_VERSION = "0.2.1";
+  var ICON_VERSION = "0.2.1"; // the drawings; bump only when an icon file changes
   var BY_NAME = {
     "Shop": "shop", "Overview": "overview", "Counter": "counter", "Service": "service", "Clinic": "clinic",
     "Healthcare": "healthcare", "Home": "home", "Accounting": "accounting", "Payables": "payables",
@@ -213,8 +213,10 @@
     return null;
   }
 
+  // Before the router has routed (at app_ready) get_route() returns null: measured on
+  // the live desk, where reading [0] of it threw on every load (0.2.1).
   function currentWorkspaceKey() {
-    var route = frappe.get_route ? frappe.get_route() : [];
+    var route = (frappe.get_route && frappe.get_route()) || [];
     if (route[0] === "Workspaces") return route[1] === "private" ? route[2] : route[1];
     var bc = frappe.breadcrumbs && frappe.breadcrumbs.all && frappe.breadcrumbs.current_page
       ? frappe.breadcrumbs.all[frappe.breadcrumbs.current_page()] : null;
@@ -312,7 +314,7 @@
     if (!isOpen() || !frappe.get_route_str) return;
     var now = frappe.get_route_str();
     if (now === openedRoute) return;
-    var route = frappe.get_route ? frappe.get_route() : [];
+    var route = (frappe.get_route && frappe.get_route()) || [];
     if (Date.now() < settleUntil && route[0] === "Workspaces") { openedRoute = now; return; }
     // Moving anywhere else (a link, the awesome bar, Back) leaves the home screen.
     close();
