@@ -14,6 +14,23 @@ written by the control plane at provisioning). The control plane answers
 from the Nezmaro manual and, for data questions, reads the site through its
 read-only tool. Nothing here writes to the ERP.
 
+## Ask Nezmaro acts with the asker's own permissions (0.2.5)
+
+The control plane answers every question, and makes every confirmed write, with
+this site's service keys, which can see and do everything. Before 0.2.5 nothing
+told it who was asking, so a cashier could ask for employee pay and anyone who
+could call `api.act` could have a Customer, Item or draft invoice written.
+
+`ask` and `act` now refuse anyone who is not a System User (shoppers, portal
+users) and send, for the doctypes Ask can use (`ASK_DOCTYPES`), which ones the
+user may read IN FULL (`can_read`) and create (`can_create`). "In full" is
+Frappe's own list query: role read, and no row condition at all — a User
+Permission (an Employee user limited to their own record), an if-owner rule,
+share-only access or a permission-query hook each make it a no, because the
+service keys would otherwise show every row. The control plane offers only the
+read tools and proposals inside those, and refuses an `act` outside them. A
+desk older than 0.2.5 sends nothing and gets manual answers only.
+
 ## The Apps home screen (0.2.0)
 
 A nine-dot button beside Ask Nezmaro in the navbar opens a home screen of big
