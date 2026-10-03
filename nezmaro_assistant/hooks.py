@@ -31,4 +31,8 @@ update_website_context = ["nezmaro_assistant.storefront.add_message_dictionary"]
 
 # 0.1.8 (#81): a "Send statement" button on the Customer page -- the month's
 # statement of account by email and on WhatsApp. See statement.py.
-doctype_js = {"Customer": "public/js/customer_statement.js"}
+# 0.2.6: the User form lists every language, not only the shop's. See languages.py.
+doctype_js = {
+    "Customer": "public/js/customer_statement.js",
+    "User": "public/js/user_language.js",
+}

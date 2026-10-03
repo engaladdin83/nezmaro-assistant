@@ -14,6 +14,22 @@ written by the control plane at provisioning). The control plane answers
 from the Nezmaro manual and, for data questions, reads the site through its
 read-only tool. Nothing here writes to the ERP.
 
+## Every language on the User form (0.2.6)
+
+A shop keeps only its own Language row enabled (the control plane's
+`site_language.apply_site_language`): Frappe matches a guest's Accept-Language
+header against the enabled rows, so with English enabled a phone set to English
+gets an Arabic shop in English. Frappe's link search also adds `enabled = 1`, so
+the same narrowing left the User form's Language dropdown empty — kami's owner
+could not pick English for himself (2026-10-03).
+
+`public/js/user_language.js` points that field at `languages.search_languages`:
+every Language row for a System User (the shop's own enabled one first), only
+the enabled rows for anyone else, nothing for Guest. It never enables a row, so
+the storefront keeps its one language. Saving a disabled language was always
+allowed (`frappe.client.validate_link` checks only that the row exists), and a
+signed-in user's language never reads `enabled`.
+
 ## Ask Nezmaro acts with the asker's own permissions (0.2.5)
 
 The control plane answers every question, and makes every confirmed write, with
@@ -168,6 +184,6 @@ must keep selling when the control plane is unreachable.
 
 Installed per site by the control plane (`bench --site <site> install-app
 nezmaro_assistant`); the app itself is baked into the host image the same
-way the edition apps are (see `deploy/editions/`).
+way the edition apps are (see `deploy/history/editions/`).
 
 License: MIT.
